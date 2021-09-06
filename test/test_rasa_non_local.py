@@ -4,10 +4,10 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from tqdm import tqdm
 
-from rpa import MultiheadNonlocal2d
+from rasa import MultiheadNonlocal2d
 
 
-def test_train():
+def test_forward():
     model = MultiheadNonlocal2d(in_channels=8,
                                 rasa_mode='relative_position',
                                 rasa_kernel_size=5,

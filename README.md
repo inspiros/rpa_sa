@@ -1,3 +1,17 @@
-# Relative Position Aware Blocks
+# Relation-Aware Self-Attention
 
-**under development**
+**currently under development**
+
+### Installation
+
+- Requirements:
+    - `torch`
+    - C++ compiler (gcc, MSVC)
+    - CUDA compiler (nvcc)
+
+- Commands:
+
+```terminal
+cd rasa
+python setup.py build_ext -i
+```
