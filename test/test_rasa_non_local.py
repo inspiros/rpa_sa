@@ -19,39 +19,59 @@ def test_forward():
 
 
 class RASAModel(nn.Module):
-    def __init__(self, num_classes, rasa_channels=64):
+    def __init__(self, num_classes):
         super(RASAModel, self).__init__()
-        self.stem = nn.Sequential(
+        self.layer1 = nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=(3, 3)),
             nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.Conv2d(16, 32, kernel_size=(3, 3)),
             nn.BatchNorm2d(32),
             nn.ReLU(),
-            nn.AvgPool2d(kernel_size=(2, 2)),
-            nn.Conv2d(32, rasa_channels, kernel_size=(3, 3)),
-            nn.BatchNorm2d(rasa_channels),
+        )
+        self.pool1 = nn.AvgPool2d(kernel_size=(2, 2))
+        self.nl1 = nn.Sequential(
+            MultiheadNonlocal2d(in_channels=32,
+                                rasa_mode='relative_position',
+                                rasa_kernel_size=7,
+                                rasa_interpolation='lerp'),
+            nn.BatchNorm2d(32)
+        )
+
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(32, 64, kernel_size=(3, 3)),
+            nn.BatchNorm2d(64),
             nn.ReLU()
         )
-        self.nl = MultiheadNonlocal2d(in_channels=rasa_channels,
-                                      rasa_mode='relative_position',
-                                      rasa_kernel_size=(7, 7),
-                                      rasa_interpolation='slerp')
-        self.bn = nn.BatchNorm2d(rasa_channels)
-        self.pool = nn.AvgPool2d(kernel_size=(3, 3))
-        self.fc = nn.Linear(rasa_channels * 4 * 4, num_classes)
+        self.pool2 = nn.AvgPool2d(kernel_size=(2, 2))
+        self.nl2 = nn.Sequential(
+            MultiheadNonlocal2d(in_channels=64,
+                                rasa_mode='relative_position',
+                                rasa_kernel_size=7,
+                                rasa_interpolation='lerp'),
+            nn.BatchNorm2d(64)
+        )
+        self.global_pool = nn.AdaptiveAvgPool2d(output_size=(1, 1))
+        self.fc = nn.Linear(64, num_classes)
 
     def forward(self, x):
-        x = self.stem(x)
-        x = self.bn(self.nl(x))
-        x = self.pool(x).flatten(1)
+        x = self.layer1(x)
+        x = self.pool1(x)
+        x = self.nl1(x)
+
+        x = self.layer2(x)
+        x = self.pool2(x)
+        x = self.nl2(x)
+
+        x = self.global_pool(x).flatten(1)
+
         x = self.fc(x)
         return x
 
 
 def test_train():
-    device = torch.device(f"cuda:{torch.cuda.device_count() - 1}"
-                          if torch.cuda.is_available() else "cpu")
+    device = "cpu" # torch.device(f"cuda:{torch.cuda.device_count() - 1}"
+                   #      if torch.cuda.is_available() else "cpu")
     torch.manual_seed(0)
 
     cifar10_train = datasets.CIFAR10(root="D:/code/projects/pycharm/multi_stream_videonet/data/cifar10",
@@ -62,11 +82,12 @@ def test_train():
                                     train=False,
                                     download=True,
                                     transform=transforms.ToTensor())
-    train_loader = DataLoader(cifar10_train, batch_size=128, shuffle=True, num_workers=8)
-    test_loader = DataLoader(cifar10_test, batch_size=128, shuffle=False, num_workers=8)
+    train_loader = DataLoader(cifar10_train, batch_size=128, shuffle=True, num_workers=2)
+    test_loader = DataLoader(cifar10_test, batch_size=128, shuffle=False, num_workers=2)
 
-    model = RASAModel(num_classes=10, ).to(device)
+    model = RASAModel(num_classes=10).to(device)
     print("# Parmeters: ", sum(a.numel() for a in model.parameters()))
+    exit()
 
     max_epochs = 30
     criterion = nn.CrossEntropyLoss()
@@ -108,6 +129,8 @@ def test_train():
         print(f'[Epoch {epoch_id + 1}/{max_epochs}] '
               f'train_acc={train_err:.03f}, train_loss={train_loss:.03f}, '
               f'test_acc={test_err:.03f}, test_loss={test_loss:.03f}')
+
+    torch.save(model.state_dict(), 'weights/relative_position_slerp.pt')
 
 
 if __name__ == '__main__':

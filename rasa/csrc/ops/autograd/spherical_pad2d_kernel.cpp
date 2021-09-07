@@ -17,7 +17,7 @@ namespace rasa {
                         int64_t pad_u,
                         int64_t pad_d,
                         const std::string &interpolation) {
-                    at::AutoNonVariableTypeMode g;
+                    at::AutoDispatchBelowADInplaceOrView g;
                     auto output = spherical_pad2d(
                             input,
                             pad_l,
@@ -85,7 +85,7 @@ namespace rasa {
                         int64_t pad_u,
                         int64_t pad_d,
                         const std::string &interpolation) {
-                    at::AutoNonVariableTypeMode g;
+                    at::AutoDispatchBelowADInplaceOrView g;
                     auto grad_input = detail::_spherical_pad2d_backward(
                             grad_output,
                             input,

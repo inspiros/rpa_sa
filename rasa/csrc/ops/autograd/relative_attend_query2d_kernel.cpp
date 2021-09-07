@@ -15,7 +15,7 @@ namespace rasa {
                         const torch::autograd::Variable &affinity,
                         int64_t height,
                         int64_t width) {
-                    at::AutoNonVariableTypeMode g;
+                    at::AutoDispatchBelowADInplaceOrView g;
                     auto output = relative_attend_query2d(
                             query,
                             affinity,
@@ -70,7 +70,7 @@ namespace rasa {
                         const torch::autograd::Variable &affinity,
                         int64_t height,
                         int64_t width) {
-                    at::AutoNonVariableTypeMode g;
+                    at::AutoDispatchBelowADInplaceOrView g;
                     auto result = detail::_relative_attend_query2d_backward(
                             grad_output,
                             query,

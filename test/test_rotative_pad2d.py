@@ -3,6 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.colors import NoNorm
+from matplotlib.patches import Rectangle
 
 
 def main():
@@ -41,22 +42,38 @@ def main():
 
     A_ref = torch.rand(channels, affinity_w, dtype=torch.float64, device=device, requires_grad=False)
     plt.subplot(131)
-    plt.imshow(A_ref[0].unsqueeze(0).cpu(), cmap='Spectral', norm=NoNorm())
-    plt.title('A_ref')
+    plt.gca().imshow(A_ref[0].unsqueeze(0).cpu(), cmap='Spectral', norm=NoNorm())
+    plt.gca().set_title('A_ref')
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
 
     A_padded = torch.ops.rasa.rotative_pad2d(A_ref.unsqueeze(0),
                                              pad_l, pad_r, pad_u, pad_d,
                                              interpolation='nearest').squeeze()
     plt.subplot(132)
-    plt.imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
-    plt.title('nearest')
+    plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
+    plt.gca().set_title('nearest')
+    plt.gca().add_patch(
+        Rectangle((pad_l - 0.5, pad_u - 0.5),
+                  width=A_ref.size(-1), height=1,
+                  linewidth=2, edgecolor='k', facecolor='none'))
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
 
     A_padded = torch.ops.rasa.rotative_pad2d(A_ref.unsqueeze(0),
                                              pad_l, pad_r, pad_u, pad_d,
                                              interpolation='lerp').squeeze()
     plt.subplot(133)
-    plt.imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
-    plt.title('lerp')
+    plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
+    plt.gca().set_title('lerp')
+    plt.gca().add_patch(
+        Rectangle((pad_l - 0.5, pad_u - 0.5),
+                  width=A_ref.size(-1), height=1,
+                  linewidth=2, edgecolor='k', facecolor='none'))
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
+
+    # plt.savefig('C:/Users/inspi/Desktop/rotative_pad.png', dpi=600, bbox_inches='tight')
     plt.show()
 
 

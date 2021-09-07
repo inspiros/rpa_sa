@@ -84,16 +84,6 @@ class _MultiheadNonlocalNd(nn.Module):
                  rasa_interpolation: str = 'nearest',
                  rasa_zero_init: bool = True):
         super(_MultiheadNonlocalNd, self).__init__()
-        if rasa_mode in [None, False]:
-            rasa_mode = None
-        elif rasa_mode == 'relative_distance':
-            rasa_kernel_size = 5 if rasa_kernel_size is None else rasa_kernel_size
-        elif rasa_mode == 'relative_position':
-            rasa_kernel_size = 5 if rasa_kernel_size is None else rasa_kernel_size
-        else:
-            raise ValueError(f'rasa_mode must be either relative_distance or '
-                             f'relative_position; got {rasa_mode}.')
-
         _to_tuple = _ntuple(dimension)
         _embed_conv_module = _get_conv_module(dimension)
         _output_conv_module = _get_conv_module(dimension, transpose=True)
@@ -102,6 +92,21 @@ class _MultiheadNonlocalNd(nn.Module):
          self._relative_distance_pad,
          self._relative_position_pad) = _get_rasa_funcs(dimension)
 
+        if rasa_mode in [None, False]:
+            rasa_mode = None
+        elif rasa_mode == 'relative_distance':
+            rasa_kernel_size = 5 if rasa_kernel_size is None else rasa_kernel_size
+            rasa_kernel_size = _ntuple(1)(rasa_kernel_size)
+            if len(rasa_kernel_size) > 1:
+                raise ValueError('rasa_kernel_size must be 1 dimension for '
+                                 f'relative_distance mode; got {rasa_kernel_size}.')
+        elif rasa_mode == 'relative_position':
+            rasa_kernel_size = 5 if rasa_kernel_size is None else rasa_kernel_size
+            rasa_kernel_size = _to_tuple(rasa_kernel_size)
+        else:
+            raise ValueError(f'rasa_mode must be either relative_distance or '
+                             f'relative_position; got {rasa_mode}.')
+
         self.in_channels = in_channels
         self.hidden_channels = hidden_channels if hidden_channels is not None else in_channels
         self.num_heads = num_heads
@@ -109,11 +114,10 @@ class _MultiheadNonlocalNd(nn.Module):
         self.scale = self.hidden_channels ** -0.5 if use_scale else 1
 
         self.rasa_mode = rasa_mode
+        self.rasa_kernel_size = rasa_kernel_size
         if self.rasa_mode == 'relative_distance':
-            self.rasa_kernel_size = _ntuple(1)(rasa_kernel_size)
             self._compute_reference_affinity = self._relative_distance_reference_affinity
         elif self.rasa_mode == 'relative_position':
-            self.rasa_kernel_size = _to_tuple(rasa_kernel_size)
             self._compute_reference_affinity = self._relative_position_reference_affinity
         self.rasa_interpolation = rasa_interpolation
         self.rasa_zero_init = rasa_zero_init
@@ -243,7 +247,7 @@ class MultiheadNonlocal1d(_MultiheadNonlocalNd):
                  dilation: Union[int, Tuple[int, ...]] = 1,
                  use_scale: bool = True,
                  residual: bool = True,
-                 rasa_mode: Optional[str] = None,
+                 rasa_mode: Union[str, bool] = None,
                  rasa_kernel_size: Union[int, Tuple[int, ...]] = None,
                  rasa_interpolation: Optional[str] = 'nearest',
                  rasa_zero_init: bool = True):
@@ -276,7 +280,7 @@ class MultiheadNonlocal2d(_MultiheadNonlocalNd):
                  dilation: Union[int, Tuple[int, ...]] = 1,
                  use_scale: bool = True,
                  residual: bool = True,
-                 rasa_mode: Optional[str] = None,
+                 rasa_mode: Union[str, bool] = None,
                  rasa_kernel_size: Union[int, Tuple[int, ...]] = None,
                  rasa_interpolation: Optional[str] = 'nearest',
                  rasa_zero_init: bool = True):
@@ -309,7 +313,7 @@ class MultiheadNonlocal3d(_MultiheadNonlocalNd):
                  dilation: Union[int, Tuple[int, ...]] = 1,
                  use_scale: bool = True,
                  residual: bool = True,
-                 rasa_mode: Optional[str] = None,
+                 rasa_mode: Union[str, bool] = None,
                  rasa_kernel_size: Union[int, Tuple[int, ...]] = None,
                  rasa_interpolation: Optional[str] = 'nearest',
                  rasa_zero_init: bool = True):
