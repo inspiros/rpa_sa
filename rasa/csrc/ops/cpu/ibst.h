@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Aten/ATen.h>
+#include <ATen/ATen.h>
 
 namespace rasa {
     template<typename scalar_t, typename index_t = int64_t>
