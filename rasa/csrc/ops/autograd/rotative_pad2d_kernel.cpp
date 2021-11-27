@@ -12,27 +12,21 @@ namespace rasa {
                 static torch::autograd::variable_list forward(
                         torch::autograd::AutogradContext *ctx,
                         const torch::autograd::Variable &input,
-                        int64_t pad_l,
-                        int64_t pad_r,
-                        int64_t pad_u,
-                        int64_t pad_d,
+                        const at::IntArrayRef &pad,
                         const std::string &interpolation) {
                     at::AutoDispatchBelowADInplaceOrView g;
                     auto output = rotative_pad2d(
                             input,
-                            pad_l,
-                            pad_r,
-                            pad_u,
-                            pad_d,
+                            pad,
                             interpolation);
 
                     ctx->save_for_backward({input});
-//                    at::IntArrayRef input_shape = input.sizes();
-//                    ctx->saved_data["input_shape"] = input_shape;
-                    ctx->saved_data["pad_l"] = pad_l;
-                    ctx->saved_data["pad_r"] = pad_r;
-                    ctx->saved_data["pad_u"] = pad_u;
-                    ctx->saved_data["pad_d"] = pad_d;
+
+//                    ctx->saved_data["pad"] = pad;
+                    ctx->saved_data["pad_l"] = pad.at(0);
+                    ctx->saved_data["pad_r"] = pad.at(1);
+                    ctx->saved_data["pad_u"] = pad.at(2);
+                    ctx->saved_data["pad_d"] = pad.at(3);
                     ctx->saved_data["interpolation"] = interpolation;
 
                     return {
@@ -46,27 +40,22 @@ namespace rasa {
 
                     auto saved = ctx->get_saved_variables();
                     auto input = saved[0];
-//                    at::IntArrayRef input_shape = ctx->saved_data["input_shape"].toIntVector();
-                    auto pad_l = ctx->saved_data["pad_l"].toInt();
-                    auto pad_r = ctx->saved_data["pad_r"].toInt();
-                    auto pad_u = ctx->saved_data["pad_u"].toInt();
-                    auto pad_d = ctx->saved_data["pad_d"].toInt();
+
+//                    at::IntArrayRef pad = ctx->saved_data["pad"].toIntVector();
+                    std::vector<int64_t> pad = {ctx->saved_data["pad_l"].toInt(),
+                                                ctx->saved_data["pad_r"].toInt(),
+                                                ctx->saved_data["pad_u"].toInt(),
+                                                ctx->saved_data["pad_d"].toInt()};
                     auto interpolation = ctx->saved_data["interpolation"].toString()->string();
 
                     auto grad_input = detail::_rotative_pad2d_backward(
                             grad_output[0],
                             input,
-                            pad_l,
-                            pad_r,
-                            pad_u,
-                            pad_d,
+                            pad,
                             interpolation);
 
                     return {
                             grad_input,
-                            torch::autograd::Variable(),
-                            torch::autograd::Variable(),
-                            torch::autograd::Variable(),
                             torch::autograd::Variable(),
                             torch::autograd::Variable(),
                     };
@@ -80,27 +69,22 @@ namespace rasa {
                         torch::autograd::AutogradContext *ctx,
                         const torch::autograd::Variable &grad_output,
                         const torch::autograd::Variable &input,
-                        int64_t pad_l,
-                        int64_t pad_r,
-                        int64_t pad_u,
-                        int64_t pad_d,
+                        const at::IntArrayRef &pad,
                         const std::string &interpolation) {
                     at::AutoDispatchBelowADInplaceOrView g;
                     auto grad_input = detail::_rotative_pad2d_backward(
                             grad_output,
                             input,
-                            pad_l,
-                            pad_r,
-                            pad_u,
-                            pad_d,
+                            pad,
                             interpolation);
 
                     ctx->save_for_backward({input});
-//                    ctx->saved_data["input_shape"] = input_shape;
-                    ctx->saved_data["pad_l"] = pad_l;
-                    ctx->saved_data["pad_r"] = pad_r;
-                    ctx->saved_data["pad_u"] = pad_u;
-                    ctx->saved_data["pad_d"] = pad_d;
+
+//                    ctx->saved_data["pad"] = pad;
+                    ctx->saved_data["pad_l"] = pad.at(0);
+                    ctx->saved_data["pad_r"] = pad.at(1);
+                    ctx->saved_data["pad_u"] = pad.at(2);
+                    ctx->saved_data["pad_d"] = pad.at(3);
                     ctx->saved_data["interpolation"] = interpolation;
 
                     return {
@@ -118,18 +102,12 @@ namespace rasa {
 
         at::Tensor rotative_pad2d_autograd(
                 const at::Tensor &input,
-                int64_t pad_l,
-                int64_t pad_r,
-                int64_t pad_u,
-                int64_t pad_d,
+                at::IntArrayRef pad,
                 const std::string &interpolation
         ) {
             return RotativePad2dFunction::apply(
                     input,
-                    pad_l,
-                    pad_r,
-                    pad_u,
-                    pad_d,
+                    pad,
                     interpolation
             )[0];
         }
@@ -137,19 +115,13 @@ namespace rasa {
         at::Tensor rotative_pad2d_backward_autograd(
                 const at::Tensor &grad,
                 const at::Tensor &input,
-                int64_t pad_l,
-                int64_t pad_r,
-                int64_t pad_u,
-                int64_t pad_d,
+                at::IntArrayRef pad,
                 const std::string &interpolation
         ) {
             return RotativePad2dBackwardFunction::apply(
                     grad,
                     input,
-                    pad_l,
-                    pad_r,
-                    pad_u,
-                    pad_d,
+                    pad,
                     interpolation
             )[0];
         }

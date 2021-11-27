@@ -181,7 +181,7 @@ class _MultiheadNonlocalNd(nn.Module):
         ]))
         return self._relative_distance_pad(
             a.unsqueeze(0),
-            *padding,
+            padding,
             interpolation=self.rasa_interpolation).squeeze(0)
 
     def _relative_position_reference_affinity(self, a, input_shape):
@@ -191,7 +191,7 @@ class _MultiheadNonlocalNd(nn.Module):
         ]))
         return self._relative_position_pad(
             a.unsqueeze(0),
-            *padding,
+            padding,
             interpolation=self.rasa_interpolation).squeeze(0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

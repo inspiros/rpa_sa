@@ -24,7 +24,7 @@ def main():
     x = torch.rand(batck_sz, channels, affinity_w,
                    dtype=torch.float64, device=device, requires_grad=requires_grad)
     out = torch.ops.rasa.rotative_pad2d(x,
-                                        pad_l, pad_r, pad_u, pad_d,
+                                        (pad_l, pad_r, pad_u, pad_d),
                                         interpolation='lerp')
     print(out.shape)
     out.backward(torch.ones_like(out))
@@ -32,8 +32,8 @@ def main():
 
     # grad check
     true_grad = torch.autograd.gradcheck(lambda _: torch.ops.rasa.rotative_pad2d(x,
-                                                                                 pad_l, pad_r, pad_u, pad_d,
-                                                                                 interpolation='lerp'),
+                                                                                 (pad_l, pad_r, pad_u, pad_d),
+                                                                                 interpolation='nearest'),
                                          inputs=(x,), nondet_tol=1e-5)
     print('grad_check', true_grad)
 
@@ -48,7 +48,7 @@ def main():
     plt.gca().set_yticks([])
 
     A_padded = torch.ops.rasa.rotative_pad2d(A_ref.unsqueeze(0),
-                                             pad_l, pad_r, pad_u, pad_d,
+                                             (pad_l, pad_r, pad_u, pad_d),
                                              interpolation='nearest').squeeze()
     plt.subplot(132)
     plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
@@ -61,7 +61,7 @@ def main():
     plt.gca().set_yticks([])
 
     A_padded = torch.ops.rasa.rotative_pad2d(A_ref.unsqueeze(0),
-                                             pad_l, pad_r, pad_u, pad_d,
+                                             (pad_l, pad_r, pad_u, pad_d),
                                              interpolation='lerp').squeeze()
     plt.subplot(133)
     plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())

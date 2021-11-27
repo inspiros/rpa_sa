@@ -100,10 +100,7 @@ namespace rasa {
 
             at::Tensor rotative_pad2d_forward_kernel(
                     const at::Tensor &input,
-                    int64_t pad_l,
-                    int64_t pad_r,
-                    int64_t pad_u,
-                    int64_t pad_d,
+                    at::IntArrayRef pad,
                     const std::string &interpolation
             ) {
                 at::DeviceGuard guard(input.device());
@@ -111,6 +108,11 @@ namespace rasa {
                 int64_t batch_sz = input.size(0);
                 int64_t channels = input.size(1);
                 int64_t width = input.size(2);
+
+                int64_t pad_l = pad.at(0);
+                int64_t pad_r = pad.at(1);
+                int64_t pad_u = pad.at(2);
+                int64_t pad_d = pad.at(3);
 
                 int64_t out_h = 1 + pad_u + pad_d;
                 int64_t out_w = 1 + pad_l + pad_r;
@@ -150,10 +152,7 @@ namespace rasa {
             at::Tensor rotative_pad2d_backward_kernel(
                     const at::Tensor &grad_output,
                     const at::Tensor &input,
-                    int64_t pad_l,
-                    int64_t pad_r,
-                    int64_t pad_u,
-                    int64_t pad_d,
+                    at::IntArrayRef pad,
                     const std::string &interpolation
             ) {
                 at::DeviceGuard guard(input.device());
@@ -161,6 +160,11 @@ namespace rasa {
                 int64_t batch_sz = input.size(0);
                 int64_t channels = input.size(1);
                 int64_t width = input.size(2);
+
+                int64_t pad_l = pad.at(0);
+                int64_t pad_r = pad.at(1);
+                int64_t pad_u = pad.at(2);
+                int64_t pad_d = pad.at(3);
 
                 int64_t out_h = 1 + pad_u + pad_d;
                 int64_t out_w = 1 + pad_l + pad_r;

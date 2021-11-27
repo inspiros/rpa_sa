@@ -1,8 +1,9 @@
+import time
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 from rasa import MultiheadNonlocal2d
 
@@ -70,8 +71,8 @@ class RASAModel(nn.Module):
 
 
 def test_train():
-    device = "cpu" # torch.device(f"cuda:{torch.cuda.device_count() - 1}"
-                   #      if torch.cuda.is_available() else "cpu")
+    device = "cpu"  # torch.device(f"cuda:{torch.cuda.device_count() - 1}"
+    #      if torch.cuda.is_available() else "cpu")
     torch.manual_seed(0)
 
     cifar10_train = datasets.CIFAR10(root="D:/code/projects/pycharm/multi_stream_videonet/data/cifar10",
@@ -133,5 +134,37 @@ def test_train():
     torch.save(model.state_dict(), 'weights/relative_position_slerp.pt')
 
 
+def test_speed():
+    device = "cuda"
+    torch.manual_seed(0)
+
+    batch_sz = 1
+    in_channels = 256
+    height = 84
+    width = 48
+
+    x = torch.rand(batch_sz, in_channels, height, width, device=device)
+    nl_module = MultiheadNonlocal2d(in_channels=in_channels,
+                                    rasa_mode=None).to(device)
+    rda_nl_module = MultiheadNonlocal2d(in_channels=in_channels,
+                                        rasa_mode='relative_distance',
+                                        rasa_kernel_size=6,
+                                        rasa_interpolation='nearest',
+                                        rasa_zero_init=False).to(device)
+
+    # warmup
+    for _ in range(10):
+        nl_module(x)
+
+    # nl_module
+    for _ in trange(200, desc='Nonlocal Module'):
+        nl_module(x)
+
+    # rda_nl_module
+    for _ in trange(200, desc='Relative Distance-Aware Nonlocal Module'):
+        rda_nl_module(x)
+
+
 if __name__ == '__main__':
-    test_train()
+    # test_train()
+    test_speed()
