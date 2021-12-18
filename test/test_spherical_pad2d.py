@@ -8,7 +8,7 @@ from matplotlib.patches import Rectangle
 
 
 def main():
-    torch.ops.load_library(os.path.abspath("../rasa/_C.cp38-win_amd64.pyd"))
+    torch.ops.load_library(os.path.abspath("../rpa/_C.cp38-win_amd64.pyd"))
     print(torch.ops.loaded_libraries)
 
     batck_sz = 1
@@ -29,17 +29,17 @@ def main():
     # forward backward check
     x = torch.rand(batck_sz, channels, affinity_h, affinity_w,
                    dtype=torch.float64, device=device, requires_grad=requires_grad)
-    out = torch.ops.rasa.spherical_pad2d(x,
-                                         (pad_l, pad_r, pad_u, pad_d),
-                                         interpolation='nearest')
+    out = torch.ops.rpa.spherical_pad2d(x,
+                                        (pad_l, pad_r, pad_u, pad_d),
+                                        interpolation='nearest')
     print(out)
     out.backward(torch.ones_like(out))
     print(x.grad)
 
     # grad check
-    true_grad = torch.autograd.gradcheck(lambda _: torch.ops.rasa.spherical_pad2d(x,
-                                                                                  (pad_l, pad_r, pad_u, pad_d),
-                                                                                  interpolation='slerp'),
+    true_grad = torch.autograd.gradcheck(lambda _: torch.ops.rpa.spherical_pad2d(x,
+                                                                                 (pad_l, pad_r, pad_u, pad_d),
+                                                                                 interpolation='slerp'),
                                          inputs=(x,), nondet_tol=1e-5)
     print('grad_check', true_grad)
 
@@ -54,9 +54,9 @@ def main():
     plt.gca().set_yticks([])
 
     plt.subplot(142)
-    A_padded = torch.ops.rasa.spherical_pad2d(A_ref.unsqueeze(0),
-                                              (pad_l, pad_r, pad_u, pad_d),
-                                              interpolation='nearest')[0]
+    A_padded = torch.ops.rpa.spherical_pad2d(A_ref.unsqueeze(0),
+                                             (pad_l, pad_r, pad_u, pad_d),
+                                             interpolation='nearest')[0]
     plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
     plt.gca().set_title('nearest')
     plt.gca().add_patch(
@@ -67,9 +67,9 @@ def main():
     plt.gca().set_yticks([])
 
     plt.subplot(143)
-    A_padded = torch.ops.rasa.spherical_pad2d(A_ref.unsqueeze(0),
-                                              (pad_l, pad_r, pad_u, pad_d),
-                                              interpolation='alerp')[0]
+    A_padded = torch.ops.rpa.spherical_pad2d(A_ref.unsqueeze(0),
+                                             (pad_l, pad_r, pad_u, pad_d),
+                                             interpolation='alerp')[0]
     plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
     plt.gca().set_title('alerp')
     plt.gca().add_patch(
@@ -80,9 +80,9 @@ def main():
     plt.gca().set_yticks([])
 
     plt.subplot(144)
-    A_padded = torch.ops.rasa.spherical_pad2d(A_ref.unsqueeze(0),
-                                              (pad_l, pad_r, pad_u, pad_d),
-                                              interpolation='slerp')[0]
+    A_padded = torch.ops.rpa.spherical_pad2d(A_ref.unsqueeze(0),
+                                             (pad_l, pad_r, pad_u, pad_d),
+                                             interpolation='slerp')[0]
     plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
     plt.gca().set_title('slerp')
     plt.gca().add_patch(

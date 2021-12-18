@@ -1,4 +1,4 @@
-# Relation-Aware Self-Attention
+# Relative Position-Aware Self-Attention
 
 **currently under development**
 
@@ -12,6 +12,6 @@
 - Commands:
 
 ```terminal
-cd rasa
+cd rpa_sa
 python setup.py build_ext -i
 ```

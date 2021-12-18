@@ -5,23 +5,23 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from tqdm import tqdm, trange
 
-from rasa import MultiheadNonlocal2d
+from rpa_sa import MultiheadNonlocal2d
 
 
 def test_forward():
     model = MultiheadNonlocal2d(in_channels=8,
-                                rasa_mode='relative_position',
-                                rasa_kernel_size=5,
-                                rasa_interpolation='slerp')
+                                rpa_mode='relative_position',
+                                rpa_kernel_size=5,
+                                rpa_interpolation='slerp')
 
     x = torch.rand(1, 8, 12, 12)
     out = model(x)
     print(out)
 
 
-class RASAModel(nn.Module):
+class RPASAModel(nn.Module):
     def __init__(self, num_classes):
-        super(RASAModel, self).__init__()
+        super(RPASAModel, self).__init__()
         self.layer1 = nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=(3, 3)),
             nn.BatchNorm2d(16),
@@ -33,9 +33,9 @@ class RASAModel(nn.Module):
         self.pool1 = nn.AvgPool2d(kernel_size=(2, 2))
         self.nl1 = nn.Sequential(
             MultiheadNonlocal2d(in_channels=32,
-                                rasa_mode='relative_position',
-                                rasa_kernel_size=7,
-                                rasa_interpolation='lerp'),
+                                rpa_mode='relative_position',
+                                rpa_kernel_size=7,
+                                rpa_interpolation='lerp'),
             nn.BatchNorm2d(32)
         )
 
@@ -47,9 +47,9 @@ class RASAModel(nn.Module):
         self.pool2 = nn.AvgPool2d(kernel_size=(2, 2))
         self.nl2 = nn.Sequential(
             MultiheadNonlocal2d(in_channels=64,
-                                rasa_mode='relative_position',
-                                rasa_kernel_size=7,
-                                rasa_interpolation='lerp'),
+                                rpa_mode='relative_position',
+                                rpa_kernel_size=7,
+                                rpa_interpolation='lerp'),
             nn.BatchNorm2d(64)
         )
         self.global_pool = nn.AdaptiveAvgPool2d(output_size=(1, 1))
@@ -86,7 +86,7 @@ def test_train():
     train_loader = DataLoader(cifar10_train, batch_size=128, shuffle=True, num_workers=2)
     test_loader = DataLoader(cifar10_test, batch_size=128, shuffle=False, num_workers=2)
 
-    model = RASAModel(num_classes=10).to(device)
+    model = RPASAModel(num_classes=10).to(device)
     print("# Parmeters: ", sum(a.numel() for a in model.parameters()))
     exit()
 
@@ -123,7 +123,7 @@ def test_train():
                                  f'acc={batch_acc:.03f}, loss={batch_loss:.03f}')
         return epoch_acc / len(loader.dataset), epoch_loss / len(loader.dataset)
 
-    print('Training RASA model')
+    print('Training RPA_SA model')
     for epoch_id in range(max_epochs):
         train_err, train_loss = epoch(epoch_id, train_loader, model, optim, scheduler)
         test_err, test_loss = epoch(epoch_id, test_loader, model)
@@ -145,12 +145,12 @@ def test_speed():
 
     x = torch.rand(batch_sz, in_channels, height, width, device=device)
     nl_module = MultiheadNonlocal2d(in_channels=in_channels,
-                                    rasa_mode=None).to(device)
+                                    rpa_mode=None).to(device)
     rda_nl_module = MultiheadNonlocal2d(in_channels=in_channels,
-                                        rasa_mode='relative_distance',
-                                        rasa_kernel_size=6,
-                                        rasa_interpolation='nearest',
-                                        rasa_zero_init=False).to(device)
+                                        rpa_mode='relative_distance',
+                                        rpa_kernel_size=6,
+                                        rpa_interpolation='nearest',
+                                        rpa_zero_init=False).to(device)
 
     # warmup
     for _ in range(10):

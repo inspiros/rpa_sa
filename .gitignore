@@ -342,6 +342,6 @@ healthchecksdb
 
 # Cmake - for this project only
 cmake-build-*
-rasa/build
+rpa_sa/build
 weights
 CMakeLists.txt

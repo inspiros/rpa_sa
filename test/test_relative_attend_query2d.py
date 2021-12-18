@@ -5,7 +5,7 @@ import torch
 
 
 def main():
-    torch.ops.load_library(os.path.abspath("../rasa/_C.cp38-win_amd64.pyd"))
+    torch.ops.load_library(os.path.abspath("../rpa/_C.cp38-win_amd64.pyd"))
 
     batch_sz = 1
     channels = 8
@@ -27,9 +27,9 @@ def main():
     print('A', a.shape)
 
     forward_start = time.time()
-    out = torch.ops.rasa.relative_attend_query2d(q, a,
-                                                 height=height,
-                                                 width=width)
+    out = torch.ops.rpa.relative_attend_query2d(q, a,
+                                                height=height,
+                                                width=width)
     forward_end = time.time()
     print('out', out)
     exit()
@@ -43,7 +43,7 @@ def main():
     print('backward elapsed_time', backward_end - backward_start)
 
     # grad_check
-    true_grad = torch.autograd.gradcheck(lambda Q, A: torch.ops.rasa.relative_attend_query2d(Q, A, height, width),
+    true_grad = torch.autograd.gradcheck(lambda Q, A: torch.ops.rpa.relative_attend_query2d(Q, A, height, width),
                                          inputs=(q, a), nondet_tol=1e-5)
     print('grad_check', true_grad)
 
