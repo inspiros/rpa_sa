@@ -7,7 +7,7 @@ from matplotlib.patches import Rectangle
 
 
 def main():
-    torch.ops.load_library(os.path.abspath("../rpa/_C.cp38-win_amd64.pyd"))
+    torch.ops.load_library(os.path.abspath("../rpa_sa/_C.cp38-win_amd64.pyd"))
     print(torch.ops.loaded_libraries)
 
     batck_sz = 1
@@ -23,17 +23,17 @@ def main():
     # forward backward check
     x = torch.rand(batck_sz, channels, affinity_w,
                    dtype=torch.float64, device=device, requires_grad=requires_grad)
-    out = torch.ops.rpa.rotative_pad2d(x,
-                                       (pad_l, pad_r, pad_u, pad_d),
-                                       interpolation='lerp')
+    out = torch.ops.rpa_sa.rotative_pad2d(x,
+                                          (pad_l, pad_r, pad_u, pad_d),
+                                          interpolation='lerp')
     print(out.shape)
     out.backward(torch.ones_like(out))
     print(x.grad)
 
     # grad check
-    true_grad = torch.autograd.gradcheck(lambda _: torch.ops.rpa.rotative_pad2d(x,
-                                                                                (pad_l, pad_r, pad_u, pad_d),
-                                                                                interpolation='nearest'),
+    true_grad = torch.autograd.gradcheck(lambda _: torch.ops.rpa_sa.rotative_pad2d(x,
+                                                                                   (pad_l, pad_r, pad_u, pad_d),
+                                                                                   interpolation='nearest'),
                                          inputs=(x,), nondet_tol=1e-5)
     print('grad_check', true_grad)
 
@@ -47,9 +47,9 @@ def main():
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
 
-    A_padded = torch.ops.rpa.rotative_pad2d(A_ref.unsqueeze(0),
-                                            (pad_l, pad_r, pad_u, pad_d),
-                                            interpolation='nearest').squeeze()
+    A_padded = torch.ops.rpa_sa.rotative_pad2d(A_ref.unsqueeze(0),
+                                               (pad_l, pad_r, pad_u, pad_d),
+                                               interpolation='nearest').squeeze()
     plt.subplot(132)
     plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
     plt.gca().set_title('nearest')
@@ -60,9 +60,9 @@ def main():
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
 
-    A_padded = torch.ops.rpa.rotative_pad2d(A_ref.unsqueeze(0),
-                                            (pad_l, pad_r, pad_u, pad_d),
-                                            interpolation='lerp').squeeze()
+    A_padded = torch.ops.rpa_sa.rotative_pad2d(A_ref.unsqueeze(0),
+                                               (pad_l, pad_r, pad_u, pad_d),
+                                               interpolation='lerp').squeeze()
     plt.subplot(133)
     plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
     plt.gca().set_title('lerp')

@@ -19,9 +19,9 @@ def test_forward():
     print(out)
 
 
-class RPASAModel(nn.Module):
+class RelativePositionAwareModel(nn.Module):
     def __init__(self, num_classes):
-        super(RPASAModel, self).__init__()
+        super(RelativePositionAwareModel, self).__init__()
         self.layer1 = nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=(3, 3)),
             nn.BatchNorm2d(16),
@@ -86,7 +86,7 @@ def test_train():
     train_loader = DataLoader(cifar10_train, batch_size=128, shuffle=True, num_workers=2)
     test_loader = DataLoader(cifar10_test, batch_size=128, shuffle=False, num_workers=2)
 
-    model = RPASAModel(num_classes=10).to(device)
+    model = RelativePositionAwareModel(num_classes=10).to(device)
     print("# Parmeters: ", sum(a.numel() for a in model.parameters()))
     exit()
 
@@ -123,7 +123,7 @@ def test_train():
                                  f'acc={batch_acc:.03f}, loss={batch_loss:.03f}')
         return epoch_acc / len(loader.dataset), epoch_loss / len(loader.dataset)
 
-    print('Training RPA_SA model')
+    print('Training RelativePositionAware model')
     for epoch_id in range(max_epochs):
         train_err, train_loss = epoch(epoch_id, train_loader, model, optim, scheduler)
         test_err, test_loss = epoch(epoch_id, test_loader, model)
