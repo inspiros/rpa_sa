@@ -135,7 +135,7 @@ def test_train():
 
 
 def test_speed():
-    device = "cuda"
+    device = "cpu"
     torch.manual_seed(0)
 
     batch_sz = 1

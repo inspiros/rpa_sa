@@ -3,23 +3,11 @@
 
 #include "cuda_helpers.h"
 #include "ibst.cuh"
+#include "../common/spherical_pad_interpolation_method.h"
 
 namespace rpa_sa {
     namespace ops {
         namespace {
-            enum SphericalPadInterpolationMethod {
-                nearest, alerp, slerp
-            };
-
-            inline SphericalPadInterpolationMethod
-            get_interpolation_method(const std::string &interpolation) {
-                if (interpolation == "alerp")
-                    return SphericalPadInterpolationMethod::alerp;
-                else if (interpolation == "slerp")
-                    return SphericalPadInterpolationMethod::slerp;
-                return SphericalPadInterpolationMethod::nearest;
-            }
-
             std::tuple<at::Tensor, at::Tensor> get_border_inds_and_thetas2d(
                     const at::Tensor& input,
                     const bool circular = true
@@ -57,7 +45,7 @@ namespace rpa_sa {
                 return std::make_tuple(border_inds, border_thetas);
             }
 
-            template<typename scalar_t>
+            template<typename scalar_t, SphericalPadInterpolationMethod interp_method>
             __global__ void spherical_pad2d_forward_kernel_impl(
                     const at::GenericPackedTensorAccessor<scalar_t, 4> input,
                     const at::GenericPackedTensorAccessor<int64_t, 2> border_inds,
@@ -66,7 +54,6 @@ namespace rpa_sa {
                     const int64_t ibst_root_id,
                     const scalar_t center_y,
                     const scalar_t center_x,
-                    const SphericalPadInterpolationMethod interp_method,
                     const int64_t batch_sz,
                     const int64_t channels,
                     const int64_t height,
@@ -126,7 +113,7 @@ namespace rpa_sa {
                 }
             }
 
-            template<typename scalar_t>
+            template<typename scalar_t, SphericalPadInterpolationMethod interp_method>
             __global__ void spherical_pad2d_backward_kernel_impl(
                     const at::GenericPackedTensorAccessor<scalar_t, 4> grad_output,
                     const at::GenericPackedTensorAccessor<int64_t, 2> border_inds,
@@ -135,7 +122,6 @@ namespace rpa_sa {
                     const int64_t ibst_root_id,
                     const scalar_t center_y,
                     const scalar_t center_x,
-                    const SphericalPadInterpolationMethod interp_method,
                     const int64_t batch_sz,
                     const int64_t channels,
                     const int64_t height,
@@ -245,25 +231,27 @@ namespace rpa_sa {
                             border_thetas = border_thetas.cuda();
                             ibst_traversal_trace = ibst_traversal_trace.cuda();
 
-                            spherical_pad2d_forward_kernel_impl<<<blocks, threads>>>(
-                                    input.generic_packed_accessor<scalar_t, 4>(),
-                                    border_inds.generic_packed_accessor<int64_t, 2>(),
-                                    border_thetas.generic_packed_accessor<scalar_t, 1>(),
-                                    ibst_traversal_trace.generic_packed_accessor<scalar_t, 2>(),
-                                    ibst_root_id,
-                                    center_y,
-                                    center_x,
-                                    get_interpolation_method(interpolation),
-                                    batch_sz,
-                                    channels,
-                                    height,
-                                    width,
-                                    pad_u,
-                                    pad_l,
-                                    out_h,
-                                    out_w,
-                                    output_accessor
-                            );
+                            RPA_SA_SPHERICAL_PAD_INTERP_METHOD_OPTION(
+                                    get_interpolation_method(interpolation), ([&] {
+                                        spherical_pad2d_forward_kernel_impl<scalar_t, interp_method><<<blocks, threads>>>(
+                                                input.generic_packed_accessor<scalar_t, 4>(),
+                                                border_inds.generic_packed_accessor<int64_t, 2>(),
+                                                border_thetas.generic_packed_accessor<scalar_t, 1>(),
+                                                ibst_traversal_trace.generic_packed_accessor<scalar_t, 2>(),
+                                                ibst_root_id,
+                                                center_y,
+                                                center_x,
+                                                batch_sz,
+                                                channels,
+                                                height,
+                                                width,
+                                                pad_u,
+                                                pad_l,
+                                                out_h,
+                                                out_w,
+                                                output_accessor
+                                        );
+                                    }));
                         }));
                 AT_CUDA_CHECK(cudaGetLastError());
                 return output;
@@ -317,25 +305,27 @@ namespace rpa_sa {
                             border_thetas = border_thetas.cuda();
                             ibst_traversal_trace = ibst_traversal_trace.cuda();
 
-                            spherical_pad2d_backward_kernel_impl<<<blocks, threads>>>(
-                                    grad_output.generic_packed_accessor<scalar_t, 4>(),
-                                    border_inds.generic_packed_accessor<int64_t, 2>(),
-                                    border_thetas.generic_packed_accessor<scalar_t, 1>(),
-                                    ibst_traversal_trace.generic_packed_accessor<scalar_t, 2>(),
-                                    ibst_root_id,
-                                    center_y,
-                                    center_x,
-                                    get_interpolation_method(interpolation),
-                                    batch_sz,
-                                    channels,
-                                    height,
-                                    width,
-                                    pad_u,
-                                    pad_l,
-                                    out_h,
-                                    out_w,
-                                    grad_input_accessor
-                            );
+                            RPA_SA_SPHERICAL_PAD_INTERP_METHOD_OPTION(
+                                    get_interpolation_method(interpolation), ([&] {
+                                        spherical_pad2d_backward_kernel_impl<scalar_t, interp_method><<<blocks, threads>>>(
+                                                grad_output.generic_packed_accessor<scalar_t, 4>(),
+                                                border_inds.generic_packed_accessor<int64_t, 2>(),
+                                                border_thetas.generic_packed_accessor<scalar_t, 1>(),
+                                                ibst_traversal_trace.generic_packed_accessor<scalar_t, 2>(),
+                                                ibst_root_id,
+                                                center_y,
+                                                center_x,
+                                                batch_sz,
+                                                channels,
+                                                height,
+                                                width,
+                                                pad_u,
+                                                pad_l,
+                                                out_h,
+                                                out_w,
+                                                grad_input_accessor
+                                        );
+                                    }));
                         }));
                 AT_CUDA_CHECK(cudaGetLastError());
                 return grad_input;

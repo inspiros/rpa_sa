@@ -11,12 +11,12 @@ def main():
     torch.ops.load_library(os.path.abspath("../rpa_sa/_C.cp38-win_amd64.pyd"))
     print(torch.ops.loaded_libraries)
 
-    batck_sz = 1
-    height, width = (16, 16)
+    batch_sz = 1
+    height, width = (11, 11)
     channels = 8
     affinity_h = 5
     affinity_w = 5
-    device = torch.device('cuda')
+    device = torch.device('cpu')
     requires_grad = True
 
     padded_shape = (height - affinity_h // 2 - 1, width - affinity_w // 2 - 1)
@@ -27,7 +27,7 @@ def main():
     print(pad_u, pad_d, pad_l, pad_r)
 
     # forward backward check
-    x = torch.rand(batck_sz, channels, affinity_h, affinity_w,
+    x = torch.rand(batch_sz, channels, affinity_h, affinity_w,
                    dtype=torch.float64, device=device, requires_grad=requires_grad)
     out = torch.ops.rpa_sa.spherical_pad2d(x,
                                            (pad_l, pad_r, pad_u, pad_d),
@@ -44,53 +44,62 @@ def main():
     print('grad_check', true_grad)
 
     # visualize
-    fig = plt.figure(figsize=(8, 4))
+    # fig = plt.figure(figsize=(8, 4))
 
-    plt.subplot(141)
-    A_ref = torch.rand(channels, affinity_h, affinity_w, dtype=torch.float64, device=device, requires_grad=False)
+    A_ref = torch.rand(channels, affinity_h, affinity_w, dtype=torch.float64, device=device)
+    # A_ref = torch.linspace(0, 1, affinity_h * affinity_w).view(1, affinity_h, affinity_w).repeat(channels, 1, 1).to(dtype=torch.float64, device=device)
+    # plt.subplot(141)
     plt.gca().imshow(A_ref[0].cpu(), cmap='Spectral', norm=NoNorm())
-    plt.gca().set_title('A_ref')
+    # plt.gca().set_title('A_ref')
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
+    # plt.savefig('C:/Users/inspi/Desktop/rpa_w.pdf', dpi=600, bbox_inches='tight')
+    plt.show()
 
-    plt.subplot(142)
+    # plt.subplot(142)
     A_padded = torch.ops.rpa_sa.spherical_pad2d(A_ref.unsqueeze(0),
                                                 (pad_l, pad_r, pad_u, pad_d),
                                                 interpolation='nearest')[0]
     plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
-    plt.gca().set_title('nearest')
+    # plt.gca().set_title('nearest')
     plt.gca().add_patch(
         Rectangle((pad_l - 0.5, pad_u - 0.5),
                   width=A_ref.size(-1), height=A_ref.size(-2),
                   linewidth=2, edgecolor='k', facecolor='none'))
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
+    # plt.savefig('C:/Users/inspi/Desktop/rpa_anearest.pdf', dpi=600, bbox_inches='tight')
+    plt.show()
 
-    plt.subplot(143)
+    # plt.subplot(143)
     A_padded = torch.ops.rpa_sa.spherical_pad2d(A_ref.unsqueeze(0),
                                                 (pad_l, pad_r, pad_u, pad_d),
                                                 interpolation='alerp')[0]
     plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
-    plt.gca().set_title('alerp')
+    # plt.gca().set_title('alerp')
     plt.gca().add_patch(
         Rectangle((pad_l - 0.5, pad_u - 0.5),
                   width=A_ref.size(-1), height=A_ref.size(-2),
                   linewidth=2, edgecolor='k', facecolor='none'))
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
+    # plt.savefig('C:/Users/inspi/Desktop/rpa_alerp.pdf', dpi=600, bbox_inches='tight')
+    plt.show()
 
-    plt.subplot(144)
+    # plt.subplot(144)
     A_padded = torch.ops.rpa_sa.spherical_pad2d(A_ref.unsqueeze(0),
                                                 (pad_l, pad_r, pad_u, pad_d),
                                                 interpolation='slerp')[0]
     plt.gca().imshow(A_padded[0].cpu(), cmap='Spectral', norm=NoNorm())
-    plt.gca().set_title('slerp')
+    # plt.gca().set_title('slerp')
     plt.gca().add_patch(
         Rectangle((pad_l - 0.5, pad_u - 0.5),
                   width=A_ref.size(-1), height=A_ref.size(-2),
                   linewidth=2, edgecolor='k', facecolor='none'))
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
+    # plt.savefig('C:/Users/inspi/Desktop/rpa_slerp.pdf', dpi=600, bbox_inches='tight')
+    plt.show()
 
     # plt.savefig('C:/Users/inspi/Desktop/spherical_pad.png', dpi=600, bbox_inches='tight')
     plt.show()

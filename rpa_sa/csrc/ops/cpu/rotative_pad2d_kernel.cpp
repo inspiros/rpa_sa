@@ -2,27 +2,16 @@
 #include <torch/library.h>
 
 #include "cpu_helpers.h"
+#include "../common/rotative_pad_interpolation_method.h"
 
 namespace rpa_sa {
     namespace ops {
         namespace {
-            enum RotativePadInterpolationMethod {
-                nearest, lerp
-            };
-
-            inline RotativePadInterpolationMethod
-            get_interpolation_method(const std::string &interpolation) {
-                if (interpolation == "lerp")
-                    return RotativePadInterpolationMethod::lerp;
-                return RotativePadInterpolationMethod::nearest;
-            }
-
-            template<typename scalar_t>
+            template<typename scalar_t, RotativePadInterpolationMethod interp_method>
             void rotative_pad2d_forward_kernel_impl(
                     const at::TensorAccessor<scalar_t, 3> input,
                     const scalar_t center_y,
                     const scalar_t center_x,
-                    const RotativePadInterpolationMethod interp_method,
                     const int64_t batch_sz,
                     const int64_t channels,
                     const int64_t width,
@@ -56,12 +45,11 @@ namespace rpa_sa {
                 }
             }
 
-            template<typename scalar_t>
+            template<typename scalar_t, RotativePadInterpolationMethod interp_method>
             void rotative_pad2d_backward_kernel_impl(
                     const at::TensorAccessor<scalar_t, 4> grad_output,
                     const scalar_t center_y,
                     const scalar_t center_x,
-                    const RotativePadInterpolationMethod interp_method,
                     const int64_t batch_sz,
                     const int64_t channels,
                     const int64_t width,
@@ -126,18 +114,20 @@ namespace rpa_sa {
                     scalar_t center_y = pad_u;
                     scalar_t center_x = pad_l;
                     auto output_accessor = output.accessor<scalar_t, 4>();
-                    rotative_pad2d_forward_kernel_impl(
-                            input.accessor<scalar_t, 3>(),
-                            center_y,
-                            center_x,
-                            get_interpolation_method(interpolation),
-                            batch_sz,
-                            channels,
-                            width,
-                            out_h,
-                            out_w,
-                            output_accessor
-                    );
+                    RPA_SA_ROTATIVE_PAD_INTERP_METHOD_OPTION(
+                            get_interpolation_method(interpolation), ([&] {
+                                rotative_pad2d_forward_kernel_impl<scalar_t, interp_method>(
+                                        input.accessor<scalar_t, 3>(),
+                                        center_y,
+                                        center_x,
+                                        batch_sz,
+                                        channels,
+                                        width,
+                                        out_h,
+                                        out_w,
+                                        output_accessor
+                                );
+                            }));
                 }));
                 return output;
             }
@@ -170,18 +160,20 @@ namespace rpa_sa {
                     scalar_t center_y = pad_u;
                     scalar_t center_x = pad_l;
                     auto grad_input_accessor = grad_input.accessor<scalar_t, 3>();
-                    rotative_pad2d_backward_kernel_impl(
-                            grad_output.accessor<scalar_t, 4>(),
-                            center_y,
-                            center_x,
-                            get_interpolation_method(interpolation),
-                            batch_sz,
-                            channels,
-                            width,
-                            out_h,
-                            out_w,
-                            grad_input_accessor
-                    );
+                    RPA_SA_ROTATIVE_PAD_INTERP_METHOD_OPTION(
+                            get_interpolation_method(interpolation), ([&] {
+                                rotative_pad2d_backward_kernel_impl<scalar_t, interp_method>(
+                                        grad_output.accessor<scalar_t, 4>(),
+                                        center_y,
+                                        center_x,
+                                        batch_sz,
+                                        channels,
+                                        width,
+                                        out_h,
+                                        out_w,
+                                        grad_input_accessor
+                                );
+                    }));
                 }));
                 return grad_input;
             }
