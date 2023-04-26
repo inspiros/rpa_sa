@@ -30,7 +30,7 @@ namespace rpa_sa {
                     scalar_t d = sqrt(dy * dy + dx * dx);
 
                     if (interp_method == RotativePadInterpolationMethod::lerp) {
-                        int64_t ind_l = min(static_cast<int64_t>(floor(d)), width - 1);
+                        int64_t ind_l = min(__double2ll_rd(d), width - 1);
                         int64_t ind_h = ind_l + 1;
                         scalar_t d_l = d - ind_l;
                         scalar_t d_h = 1 - d_l;
@@ -39,7 +39,7 @@ namespace rpa_sa {
                                              d_h * input[b][c][ind_l] + d_l * input[b][c][ind_h]
                                                                  : input[b][c][width - 1];
                     } else {
-                        int64_t ind_n = min(static_cast<int64_t>(round(d)), width - 1);
+                        int64_t ind_n = min(__double2ll_rn(d), width - 1);
                         output[b][c][i][j] = input[b][c][ind_n];
                     }
                 }
@@ -69,7 +69,7 @@ namespace rpa_sa {
 
                     scalar_t grad_val = grad_output[b][c][i][j];
                     if (interp_method == RotativePadInterpolationMethod::lerp) {
-                        int64_t ind_l = min(static_cast<int64_t>(floor(d)), width - 1);
+                        int64_t ind_l = min(__double2ll_rd(d), width - 1);
                         int64_t ind_h = ind_l + 1;
                         if (ind_l < width - 1) {
                             scalar_t d_l = d - ind_l;
@@ -80,7 +80,7 @@ namespace rpa_sa {
                             gpuAtomicAdd(&grad_input[b][c][width - 1], grad_val);
                         }
                     } else {
-                        int64_t ind_n = min(static_cast<int64_t>(round(d)), width - 1);
+                        int64_t ind_n = min(__double2ll_rn(d), width - 1);
                         gpuAtomicAdd(&grad_input[b][c][ind_n], grad_val);
                     }
                 }

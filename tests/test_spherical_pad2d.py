@@ -53,7 +53,7 @@ def main():
     # plt.gca().set_title('A_ref')
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
-    # plt.savefig('C:/Users/inspi/Desktop/rpa_w.pdf', dpi=600, bbox_inches='tight')
+    plt.savefig('../images/rpa_w.png', dpi=600, bbox_inches='tight')
     plt.show()
 
     # plt.subplot(142)
@@ -68,7 +68,7 @@ def main():
                   linewidth=2, edgecolor='k', facecolor='none'))
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
-    # plt.savefig('C:/Users/inspi/Desktop/rpa_anearest.pdf', dpi=600, bbox_inches='tight')
+    plt.savefig('../images/rpa_anearest.png', dpi=600, bbox_inches='tight')
     plt.show()
 
     # plt.subplot(143)
@@ -83,7 +83,7 @@ def main():
                   linewidth=2, edgecolor='k', facecolor='none'))
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
-    # plt.savefig('C:/Users/inspi/Desktop/rpa_alerp.pdf', dpi=600, bbox_inches='tight')
+    plt.savefig('../images/rpa_alerp.png', dpi=600, bbox_inches='tight')
     plt.show()
 
     # plt.subplot(144)
@@ -98,7 +98,7 @@ def main():
                   linewidth=2, edgecolor='k', facecolor='none'))
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
-    # plt.savefig('C:/Users/inspi/Desktop/rpa_slerp.pdf', dpi=600, bbox_inches='tight')
+    plt.savefig('../images/rpa_slerp.png', dpi=600, bbox_inches='tight')
     plt.show()
 
     # plt.savefig('C:/Users/inspi/Desktop/spherical_pad.png', dpi=600, bbox_inches='tight')

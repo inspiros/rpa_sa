@@ -7,6 +7,8 @@ from torch import nn
 from torch.nn.modules.conv import _ConvNd
 from torch.nn.modules.utils import _ntuple
 
+from .extension import _assert_has_ops
+
 __all__ = [
     'MultiheadNonlocal1d',
     'MultiheadNonlocal2d',
@@ -84,6 +86,8 @@ class _MultiheadNonlocalNd(nn.Module):
                  rpa_interpolation: str = 'nearest',
                  rpa_zero_init: bool = True):
         super(_MultiheadNonlocalNd, self).__init__()
+        _assert_has_ops()
+
         _to_tuple = _ntuple(dimension)
         _embed_conv_module = _get_conv_module(dimension)
         _output_conv_module = _get_conv_module(dimension, transpose=True)
@@ -204,19 +208,36 @@ class _MultiheadNonlocalNd(nn.Module):
                                                  dilation=self.dilation)
 
         ys = []
+        # import time
         for head_id in range(self.num_heads):
             q, k, v = self.embed_conv[head_id](x).flatten(2).chunk(3, dim=1)
 
             attn = torch.einsum('bci,bcj->bij', q, k)
             if self.a_k is not None:
+                # start = time.time()
                 A_k_ref = self._compute_reference_affinity(self.a_k[head_id], hidden_dims)
+                # end = time.time()
+                # if end - start > .5:
+                #     print('compute_reference_affinity', end - start)
+                # start = time.time()
                 attn += self._attend_query(q, A_k_ref, *hidden_dims)
+                # end = time.time()
+                # if end - start > .5:
+                #     print('attend_query', end - start)
             attn = attn.mul(self.scale).softmax(dim=-1)
 
             y = torch.einsum('bij,bcj->bci', attn, v)
             if self.a_v is not None:
+                # start = time.time()
                 A_v_ref = self._compute_reference_affinity(self.a_v[head_id], hidden_dims)
+                # end = time.time()
+                # if end - start > .5:
+                #     print('compute_reference_affinity', end - start)
+                # start = time.time()
                 y += self._attend_weight(attn, A_v_ref, *hidden_dims)
+                # end = time.time()
+                # if end - start > .5:
+                #     print('attend_weight', end - start)
             ys.append(y)
         ys = torch.cat(ys, dim=1).view(batch_sz,
                                        self.hidden_channels * self.num_heads,

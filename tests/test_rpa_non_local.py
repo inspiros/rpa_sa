@@ -1,4 +1,3 @@
-import time
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -134,8 +133,8 @@ def test_train():
     torch.save(model.state_dict(), 'weights/relative_position_slerp.pt')
 
 
-def test_speed():
-    device = "cpu"
+def test_speed(device='cuda'):
+    device = torch.device(device)
     torch.manual_seed(0)
 
     batch_sz = 1
@@ -157,14 +156,15 @@ def test_speed():
         nl_module(x)
 
     # nl_module
-    for _ in trange(200, desc='Nonlocal Module'):
+    for _ in trange(100, desc='Nonlocal Module'):
         nl_module(x)
 
     # rda_nl_module
-    for _ in trange(200, desc='Relative Distance-Aware Nonlocal Module'):
+    for _ in trange(100, desc='Relative Distance-Aware Nonlocal Module'):
         rda_nl_module(x)
 
 
 if __name__ == '__main__':
+    # test_forward()
     # test_train()
     test_speed()

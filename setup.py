@@ -1,21 +1,30 @@
-import os
 import glob
+import os
+import sys
 
 import torch
-
+from setuptools import setup
+from torch.utils.cpp_extension import CUDAExtension
 from torch.utils.cpp_extension import CUDA_HOME
 from torch.utils.cpp_extension import CppExtension
-from torch.utils.cpp_extension import CUDAExtension
 
-from setuptools import find_packages
-from setuptools import setup
+PACKAGE_ROOT = 'rpa_sa'
 
-requirements = ['torch']
+
+def get_version(version_file='_version.py'):
+    import importlib.util
+    version_file_path = os.path.abspath(os.path.join(PACKAGE_ROOT, version_file))
+    try:
+        spec = importlib.util.spec_from_file_location('_version', version_file_path)
+        version_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(version_module)
+        return str(version_module.__version__)
+    except:
+        return '0.0.0'
 
 
 def get_extensions():
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-    extensions_dir = os.path.join(this_dir, 'csrc')
+    extensions_dir = os.path.join(PACKAGE_ROOT, 'csrc')
 
     main_file = (glob.glob(os.path.join(extensions_dir, '*.cpp')) +
                  glob.glob(os.path.join(extensions_dir, 'ops', '*.cpp'))
@@ -47,11 +56,13 @@ def get_extensions():
         # nvcc_flags.append('-DCUDA_HOST_COMPILER=/usr/bin/gcc-7')
         extra_compile_args['nvcc'] = nvcc_flags
 
-    sources = [os.path.join(extensions_dir, s) for s in sources]
+    if sys.platform == 'win32':
+        define_macros += [('USE_PYTHON', None)]
+
     include_dirs = [extensions_dir, os.path.join(extensions_dir, 'cpu'), os.path.join(extensions_dir, 'cuda')]
     ext_modules = [
         extension(
-            '_C',
+            f'{PACKAGE_ROOT}._C',
             sources=sources,
             include_dirs=include_dirs,
             define_macros=define_macros,
@@ -61,16 +72,15 @@ def get_extensions():
     return ext_modules
 
 
-setup(
-    name='rpa_sa',
-    version='1.0',
-    author='inspiros',
-    author_email='hnhat.tran@gmail.com',
-    description='Relative Position-Aware Self-Attention',
-    packages=find_packages(exclude=('configs', 'tests',)),
-    install_requires=requirements,
-    ext_modules=get_extensions(),
-    cmdclass={
-        'build_ext': torch.utils.cpp_extension.BuildExtension.with_options(use_ninja=False)
-    },
-)
+def setup_package():
+    setup(
+        version=get_version(),
+        ext_modules=get_extensions(),
+        cmdclass={
+            'build_ext': torch.utils.cpp_extension.BuildExtension.with_options(use_ninja=False)
+        },
+    )
+
+
+if __name__ == '__main__':
+    setup_package()

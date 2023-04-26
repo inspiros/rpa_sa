@@ -47,7 +47,7 @@ def main():
     # plt.gca().set_title('A_ref')
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
-    # plt.savefig('C:/Users/inspi/Desktop/rda_w.pdf', dpi=600, bbox_inches='tight')
+    plt.savefig('../images/rda_w.png', dpi=600, bbox_inches='tight')
     plt.show()
 
     A_padded = torch.ops.rpa_sa.rotative_pad2d(A_ref.unsqueeze(0),
@@ -62,7 +62,7 @@ def main():
                   linewidth=2, edgecolor='k', facecolor='none'))
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
-    # plt.savefig('C:/Users/inspi/Desktop/rda_nearest.pdf', dpi=600, bbox_inches='tight')
+    plt.savefig('../images/rda_nearest.png', dpi=600, bbox_inches='tight')
     plt.show()
 
     A_padded = torch.ops.rpa_sa.rotative_pad2d(A_ref.unsqueeze(0),
@@ -78,7 +78,7 @@ def main():
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
 
-    # plt.savefig('C:/Users/inspi/Desktop/rda_lerp.pdf', dpi=600, bbox_inches='tight')
+    plt.savefig('../images/rda_lerp.png', dpi=600, bbox_inches='tight')
     plt.show()
 
 

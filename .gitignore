@@ -35,7 +35,7 @@ bld/
 # Visual Studio 2017 auto generated files
 Generated\ Files/
 
-# MSTest test Results
+# MSTest examples Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
@@ -340,9 +340,18 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 
-# Cmake - for this project only
+# build directories
 cmake-build-*
-rpa_sa/build
-weights
+build/
+dist/
+wheelhouse/
+*.egg-info/
+
+# secret
+develop/
+images/
+weights/
+
+# Cmake - for this project only
 CMakeLists.txt
 make.bat
