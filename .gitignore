@@ -351,6 +351,3 @@ wheelhouse/
 develop/
 images/
 weights/
-
-# Cmake - for this project only
-CMakeLists.txt
